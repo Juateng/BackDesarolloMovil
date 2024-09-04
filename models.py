@@ -4,4 +4,3 @@ mongo = PyMongo()
 
 def init_db(app):
     mongo.init_app(app)
-
