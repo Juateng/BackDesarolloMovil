@@ -46,6 +46,23 @@ def register():
         return jsonify({"msg": "Usuario Creado Correctamente"}), 201
     else:
         return jsonify({"msg": "Hubo un error, no se pudieron guardar los datos"}),400
+    
+#Definimos la ruta del endpoint para el login
+
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+
+    user = mongo.db.users.find_one({'email': email})
+
+    if user and bcrypt.check_password_hash(user['password'], password):
+        access_token = create_access_token(identity=str(user["_id"]))
+        return jsonify(access_token = access_token), 200
+    else:
+        return jsonify({"msg":"credenciales incorrectas"}), 401
+
 
 # En Python, cada archivo tiene una variable especial llamada __name__.
 # Si el archivo se está ejecutando directamente (no importado como un módulo en otro archivo), 
