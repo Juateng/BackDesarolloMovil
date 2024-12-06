@@ -11,6 +11,8 @@ bcrypt = Bcrypt()
 #Definimos el endpoint para registrar un usuario
 #Utilizamos el decorador @app.route('/') para definir la ruta de la URL e inmediatamente después
 #la función que se ejecutará en esa ruta
+
+#-------------------------------------------------------Crear usuario---------------------------------------------
 @user_bp.route('/register', methods=['POST'])
 def register():
     #Estos son los datos que pasamos al post en formato JSON
@@ -32,6 +34,7 @@ def register():
     else:
         return jsonify({"msg": "Hubo un error, no se pudieron guardar los datos"}),400
 
+#-----------------------------------------------------LOGIN-----------------------------------------------------------    
 #Definimos la ruta del endpoint para el login
 @user_bp.route('/login', methods=['POST'])
 def login():
@@ -47,6 +50,7 @@ def login():
     else:
         return jsonify({"msg":"credenciales incorrectas"}), 401
     
+#-----------------------------------------------------Ver Informacion--------------------------------------------------
 #Creamos el endpoint protegido
 @user_bp.route('/datos', methods=['POST'])
 @jwt_required()
@@ -61,3 +65,52 @@ def datos():
         return jsonify({"msg":"Usuario encontrado", "Usuario": usuario}), 200
     else: 
         return jsonify({"msg":"Usuario NO encontrado"}), 404
+    
+#-----------------------------------------------------Eliminar usuario-------------------------------------------------
+@user_bp.route('/delete-user', methods=['DELETE'])
+def delete_user():
+    data = request.get_json()
+    email = data.get('email')
+
+    # Verificar si el usuario existe
+    user = mongo.db.users.find_one({"email": email})
+
+    if user:
+        # Eliminar el usuario
+        result = mongo.db.users.delete_one({"email": email})
+
+        if result.deleted_count > 0:
+            return jsonify({"msg": "Usuario eliminado correctamente"}), 200
+        else:
+            return jsonify({"msg": "Hubo un error, no se pudo eliminar el usuario"}), 400
+    else:
+        return jsonify({"msg": "No se encontró un usuario con ese email"}), 404
+
+#-----------------------------------------------------Editar usuario---------------------------------------------------
+@user_bp.route('/edit-user', methods=['PUT'])
+def edit_user():
+    data = request.get_json()
+    email = data.get('email')
+    new_username = data.get('username')
+    new_password = data.get('password')
+
+    # Buscar el usuario por email
+    user = mongo.db.users.find_one({"email": email})
+
+    if user:
+        updated_fields = {}
+        if new_username:
+            updated_fields['username'] = new_username
+        if new_password:
+            updated_fields['password'] = bcrypt.generate_password_hash(new_password).decode('utf-8')
+
+        # Actualizar solo los campos que fueron provistos
+        result = mongo.db.users.update_one({"email": email}, {"$set": updated_fields})
+
+        if result.modified_count > 0:
+            return jsonify({"msg": "Usuario actualizado correctamente"}), 200
+        else:
+            return jsonify({"msg": "No se realizaron cambios en el usuario"}), 400
+    else:
+        return jsonify({"msg": "No se encontró un usuario con ese email"}), 404
+

@@ -94,3 +94,21 @@ def edit_event():
     else:
         return jsonify({"msg": "No se encontró un evento con ese nombre"}), 404
 
+#---------------------------------------------------------------------MOSTRAR TODOS LOS EVENTOS----------------------------------------
+@event_bp.route('/all', methods=['GET'])
+def show_all_events():
+    try:
+        eventos = mongo.db.events.find()
+
+        eventos_list = []
+        for evento in eventos:
+            evento['_id'] = str(evento['_id'])
+            eventos_list.append(evento)
+
+        if eventos_list:
+            return jsonify({"msg": "Eventos encontrados", "Eventos": eventos_list}), 200
+        else:
+            return jsonify({"msg": "No hay eventos registrados"}), 404
+
+    except Exception as e:
+        return jsonify({"msg": "Ocurrió un error al obtener los eventos", "error": str(e)}), 500
