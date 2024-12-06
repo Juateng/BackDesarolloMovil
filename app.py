@@ -14,10 +14,13 @@ from flask_bcrypt import Bcrypt
 from routes.user_routes import user_bp
 from routes.events_routes import event_bp
 from routes.ticket_routes import ticket_bp
+from flask_cors import CORS
 
 #Inicializamos la aplicación y usamos el config file
 app = Flask(__name__)
 app.config.from_object(Config)
+CORS(app)  # Esto habilita CORS para todos los dominios, lo que es útil para pruebas locales
+
 
 #Inicializamos a bcrypt y jwt
 bcrypt = Bcrypt(app)
